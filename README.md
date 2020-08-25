@@ -30,11 +30,11 @@ Get the MIMIC-CXR-JPG data from [physionet](https://physionet.org/content/mimic-
 
 To pretrain the doc2vec model on the reports, use
 ```
-python main.py --model doc2vec
+python main.py --model Doc2Vec
 ```
 To train a visual model on the doc2vec embeddings, use
 ```
-python main.py --model visual
+python main.py --model Visual
 ```
 
 To finetune the visual model on the mimic labels, use
