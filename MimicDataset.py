@@ -1,14 +1,13 @@
 from __future__ import print_function
 import os
+import utils
+import numpy as np
+import torch
+import sys
 from PIL import Image
 from torch.utils.data import Dataset
 import pandas as pd
 from tqdm import tqdm
-import utils
-import numpy as np
-import re
-import gensim
-
 
 
 class MimicDataset(Dataset):
@@ -35,6 +34,7 @@ class MimicDataset(Dataset):
                                              (df_labels['study_id'] == row['study_id'])]
             if index == 100:
                 break
+
         self.keys = list(self.labels.keys())
         self.transform = utils.get_transforms(name)
 
@@ -42,18 +42,23 @@ class MimicDataset(Dataset):
         key = self.keys[idx]
         img_path = os.path.join(self.args.data_root,
                                 self.args.image_folder,
-                                'p'+str(key[0])[:2], # 10000032 -> p10
-                                'p'+str(key[0]),
-                                's'+str(key[1]),
+                                'p' + str(key[0])[:2],  # 10000032 -> p10
+                                'p' + str(key[0]),
+                                's' + str(key[1]),
                                 str(key[2]) + '.jpg'
                                 )
 
         report_path = os.path.join(self.args.data_root,
                                    self.args.report_folder,
-                                   'p'+str(key[0])[:2], # 10000032 -> p10
-                                   'p'+str(key[0]),
-                                   's'+str(key[1]) + '.txt'
+                                   'p' + str(key[0])[:2],  # 10000032 -> p10
+                                   'p' + str(key[0]),
+                                   's' + str(key[1]) + '.txt'
                                    )
+
+        vector_path = os.path.join(self.args.data_root,
+                                 self.args.vector_folder,
+                                 str(key[0]) + '-' + str(key[1]) + '.npy'
+                                 )
         # image
         img = self.transform(Image.open(img_path).convert('RGB'))
 
@@ -61,27 +66,14 @@ class MimicDataset(Dataset):
         txt = open(report_path, mode='r').read()
         txt = txt.replace('FINAL REPORT', '')
 
-        # findings = re.search('FINDINGS:(.*?)(IMPRESSION|$)', txt, flags=re.DOTALL) # Between findings and impression or EOF
-        # impression = re.search('IMPRESSION:(.*?)$', txt, flags=re.DOTALL) # Between impression and EOF
-        # view = re.search('VIEWS OF THE CHEST:(.*?)$', txt, flags=re.DOTALL)
-        # # indication = re.search('INDICATION:(.*?)\n', txt)
-        #
-        # assert \
-        #     'FINDINGS' in txt or \
-        #     'IMPRESSION' in txt or \
-        #     'VIEWS OF THE CHEST' in txt, 'no findings or impression or impression for ' + str(key) + '\n' + txt
-        #
-        # assert \
-        #     findings is not None or \
-        #     view is not None or \
-        #     impression is not None, 'no regex match for ' + str(key) + '\n' + txt
-        #
-        # if findings is not None:
-        #     report = findings.group(1)
-        # elif impression is not None:
-        #     report = impression.group(1)
-        # else:
-        #     report = view.group(1)
+        # vectors
+        vector = torch.tensor([])
+        if self.args.model == 'Visual':
+            try:
+                vector = np.load(vector_path)
+            except FileNotFoundError:
+                print('Vectors not found for key', key, vector_path)
+                raise
 
         # label
         label = self.labels[key]
@@ -90,8 +82,8 @@ class MimicDataset(Dataset):
                 'key': key,
                 'report': txt,
                 'img': img,
+                'vector': vector,
                 'label': np.array(label)}
-
 
     def __len__(self):
         return len(self.keys)

@@ -2,7 +2,7 @@ import argparse, os, random
 import numpy as np
 import torch
 from MimicDataset import MimicDataset
-from model import Model
+from visual import Visual
 from doc2vec import Doc2Vec
 from torch.utils.data import DataLoader
 from train import train
@@ -18,6 +18,7 @@ def parse_args():
     parser.add_argument('--label_file', type=str, default='mimic-cxr-2.0.0-chexpert.csv')
     parser.add_argument('--report_folder', type=str, default='mimic-crx-reports/files/')
     parser.add_argument('--image_folder', type=str, default='mimic-crx-images/files/')
+    parser.add_argument('--vector_folder', type=str, default='mimic_crx_vectors/')
 
     # Training
     parser.add_argument('--output', type=str, default='ckpt/')
