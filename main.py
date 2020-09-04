@@ -2,7 +2,7 @@ import argparse, os, random
 import numpy as np
 import torch
 from MimicDataset import MimicDataset
-from visual import Visual
+from visual import *
 from doc2vec import Doc2Vec
 from torch.utils.data import DataLoader
 from train import train
@@ -10,7 +10,8 @@ from train import train
 def parse_args():
     parser = argparse.ArgumentParser()
     # Model
-    parser.add_argument('--model', type=str, default="Doc2Vec")
+    parser.add_argument('--model', type=str, default="Finetune")
+    parser.add_argument('--checkpoint', type=str, default=None)
 
     # Data
     parser.add_argument('--data_root', type=str, default='./data/')
@@ -21,6 +22,7 @@ def parse_args():
     parser.add_argument('--vector_folder', type=str, default='mimic_crx_vectors/')
 
     # Training
+    parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--output', type=str, default='ckpt/')
     parser.add_argument('--name', type=str, default='exp0/')
     parser.add_argument('--batch_size', type=int, default=2)
@@ -31,7 +33,6 @@ def parse_args():
     parser.add_argument('--grad_norm_clip', type=float, default=-1)
     parser.add_argument('--eval_start', type=int, default=0)
     parser.add_argument('--early_stop', type=int, default=3)
-    parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--seed', type=int, default=random.randint(0, 9999999))
 
     # Dataset and task
@@ -58,7 +59,7 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dset,
                               1 if args.model == 'Doc2Vec' else args.batch_size,
                               shuffle=True,
-                              num_workers=8,
+                              num_workers=4,
                               pin_memory=True)
 
     # eval_loader = DataLoader(eval_dset, args.batch_size, num_workers=8, pin_memory=True)
